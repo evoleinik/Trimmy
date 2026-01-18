@@ -467,6 +467,11 @@ extension ClipboardMonitor {
             wasTransformed = true
         }
 
+        if let quotedPath = self.detector.quotePathWithSpaces(currentText) {
+            currentText = quotedPath
+            wasTransformed = true
+        }
+
         let isTerminal = sourceContext?.isTerminal == true
         let useTerminalAggressiveness = isTerminal && self.settings.contextAwareTrimmingEnabled
         let baseAggressiveness = useTerminalAggressiveness

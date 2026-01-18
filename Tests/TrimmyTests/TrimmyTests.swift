@@ -649,4 +649,119 @@ struct TrimmyTests {
         """
         #expect(detector.stripPromptPrefixes(text) == nil)
     }
+
+    // MARK: - Path Quoting Tests
+
+    @Test
+    func quotesAbsolutePathWithSpaces() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "/Users/anton/My Documents/project"
+        #expect(detector.quotePathWithSpaces(path) == "\"/Users/anton/My Documents/project\"")
+    }
+
+    @Test
+    func quotesHomeRelativePathWithSpaces() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "~/Library/Application Support/SomeApp"
+        #expect(detector.quotePathWithSpaces(path) == "\"~/Library/Application Support/SomeApp\"")
+    }
+
+    @Test
+    func quotesCurrentDirRelativePathWithSpaces() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "./My Project/src"
+        #expect(detector.quotePathWithSpaces(path) == "\"./My Project/src\"")
+    }
+
+    @Test
+    func quotesParentDirRelativePathWithSpaces() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "../Other Project/lib"
+        #expect(detector.quotePathWithSpaces(path) == "\"../Other Project/lib\"")
+    }
+
+    @Test
+    func doesNotQuotePathWithoutSpaces() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "/Users/anton/Documents/project"
+        #expect(detector.quotePathWithSpaces(path) == nil)
+    }
+
+    @Test
+    func doesNotQuoteAlreadyQuotedPath() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "\"/Users/anton/My Documents/project\""
+        #expect(detector.quotePathWithSpaces(path) == nil)
+    }
+
+    @Test
+    func doesNotQuoteAlreadySingleQuotedPath() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "'/Users/anton/My Documents/project'"
+        #expect(detector.quotePathWithSpaces(path) == nil)
+    }
+
+    @Test
+    func doesNotQuoteMultiLinePaths() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "/Users/anton/My Documents\n/another/path"
+        #expect(detector.quotePathWithSpaces(path) == nil)
+    }
+
+    @Test
+    func doesNotQuoteCommandWithFlags() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        // This looks like a command, not a path
+        let text = "/usr/bin/ls -la /some/path"
+        #expect(detector.quotePathWithSpaces(text) == nil)
+    }
+
+    @Test
+    func doesNotQuoteNonPathText() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let text = "just some text with spaces"
+        #expect(detector.quotePathWithSpaces(text) == nil)
+    }
+
+    @Test
+    func escapesExistingDoubleQuotesInPath() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "/Users/anton/My \"Special\" Folder"
+        #expect(detector.quotePathWithSpaces(path) == "\"/Users/anton/My \\\"Special\\\" Folder\"")
+    }
+
+    @Test
+    func trimsWhitespaceBeforeQuoting() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "  /Users/anton/My Documents/project  \n"
+        #expect(detector.quotePathWithSpaces(path) == "\"/Users/anton/My Documents/project\"")
+    }
+
+    @Test
+    func quotesRelativePathWithSpaces() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let path = "designcode.io/SwiftUI for iOS 17/Xcode Final/iOS17"
+        #expect(detector.quotePathWithSpaces(path) == "\"designcode.io/SwiftUI for iOS 17/Xcode Final/iOS17\"")
+    }
+
+    @Test
+    func doesNotQuoteURLs() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let url = "https://example.com/path with spaces"
+        #expect(detector.quotePathWithSpaces(url) == nil)
+    }
 }

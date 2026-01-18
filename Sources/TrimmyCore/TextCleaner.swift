@@ -43,6 +43,49 @@ public struct TextCleaner: Sendable {
         return collapsed
     }
 
+    /// Quotes a filesystem path that contains spaces so it can be used directly in shell commands.
+    /// Returns nil if no transformation is needed.
+    public func quotePathWithSpaces(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Skip if empty or multi-line
+        guard !trimmed.isEmpty, !trimmed.contains("\n") else { return nil }
+
+        // Skip if already quoted
+        if (trimmed.hasPrefix("\"") && trimmed.hasSuffix("\""))
+            || (trimmed.hasPrefix("'") && trimmed.hasSuffix("'"))
+        {
+            return nil
+        }
+
+        // Must look like a path:
+        // - Absolute (/), home-relative (~/), current-dir (./), parent-dir (..)
+        // - Or a relative path containing "/" (e.g., "folder/sub folder/file.txt")
+        let hasExplicitPathPrefix = trimmed.hasPrefix("/")
+            || trimmed.hasPrefix("~/")
+            || trimmed.hasPrefix("./")
+            || trimmed.hasPrefix("../")
+
+        // For relative paths without prefix, must contain "/" and not be a URL
+        let looksLikeRelativePath = trimmed.contains("/")
+            && !trimmed.contains("://")
+
+        guard hasExplicitPathPrefix || looksLikeRelativePath else { return nil }
+
+        // Must contain at least one space that would cause shell issues
+        guard trimmed.contains(" ") else { return nil }
+
+        // Skip if it looks like a command (has flags or multiple path-like segments separated by spaces)
+        // e.g., "ls -la /some/path" should not be quoted as a single path
+        if trimmed.range(of: #"\s-[A-Za-z]"#, options: .regularExpression) != nil {
+            return nil
+        }
+
+        // Escape any existing double quotes and wrap in double quotes
+        let escaped = trimmed.replacingOccurrences(of: "\"", with: "\\\"")
+        return "\"\(escaped)\""
+    }
+
     // MARK: - Public pipeline
 
     public func transform(
@@ -65,6 +108,11 @@ public struct TextCleaner: Sendable {
 
         if let repairedURL = self.repairWrappedURL(currentText) {
             currentText = repairedURL
+            wasTransformed = true
+        }
+
+        if let quotedPath = self.quotePathWithSpaces(currentText) {
+            currentText = quotedPath
             wasTransformed = true
         }
 

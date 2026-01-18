@@ -18,6 +18,10 @@ struct CommandDetector {
         self.cleaner.repairWrappedURL(text)
     }
 
+    func quotePathWithSpaces(_ text: String) -> String? {
+        self.cleaner.quotePathWithSpaces(text)
+    }
+
     func transformIfCommand(_ text: String, aggressivenessOverride: Aggressiveness? = nil) -> String? {
         let baseAggressiveness = self.settings.generalAggressiveness.coreAggressiveness
         guard let aggressiveness = aggressivenessOverride ?? baseAggressiveness else { return nil }
