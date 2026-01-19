@@ -726,6 +726,30 @@ struct TrimmyTests {
     }
 
     @Test
+    func doesNotQuoteCommandWithPathArgument() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let text = "cd /Users/anton/My Documents"
+        #expect(detector.quotePathWithSpaces(text) == nil)
+    }
+
+    @Test
+    func doesNotQuoteCommandWithPathArgumentWithoutFlags() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let text = "open /Users/anton/My Documents"
+        #expect(detector.quotePathWithSpaces(text) == nil)
+    }
+
+    @Test
+    func doesNotQuoteSentenceContainingPath() {
+        let settings = AppSettings()
+        let detector = CommandDetector(settings: settings)
+        let text = "See /Users/anton/My Documents for details"
+        #expect(detector.quotePathWithSpaces(text) == nil)
+    }
+
+    @Test
     func doesNotQuoteNonPathText() {
         let settings = AppSettings()
         let detector = CommandDetector(settings: settings)

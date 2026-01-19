@@ -2,6 +2,7 @@
 
 ## 0.7.1 — Unreleased
 - Added a menu-only “Paste Reformatted Markdown” action to join wrapped markdown paragraphs and bullet lists while preserving blank lines and fenced code blocks.
+- Path quoting now only wraps standalone paths (not commands or sentences) when they contain spaces (#17, thanks @n0an).
 
 ## 0.7.0 — 2025-12-30
 - **Highlight:** Context-aware trimming with terminal detection, plus per-terminal aggressiveness (Cmd-C tracking + frontmost-app fallback).

@@ -58,17 +58,23 @@ public struct TextCleaner: Sendable {
             return nil
         }
 
-        // Must look like a path:
-        // - Absolute (/), home-relative (~/), current-dir (./), parent-dir (..)
-        // - Or a relative path containing "/" (e.g., "folder/sub folder/file.txt")
-        let hasExplicitPathPrefix = trimmed.hasPrefix("/")
-            || trimmed.hasPrefix("~/")
-            || trimmed.hasPrefix("./")
-            || trimmed.hasPrefix("../")
+        guard let firstToken = trimmed.split(
+            maxSplits: 1,
+            omittingEmptySubsequences: true,
+            whereSeparator: \.isWhitespace).first else { return nil }
+        let firstTokenText = String(firstToken)
 
-        // For relative paths without prefix, must contain "/" and not be a URL
-        let looksLikeRelativePath = trimmed.contains("/")
-            && !trimmed.contains("://")
+        // Skip URLs (even if they contain spaces)
+        guard !trimmed.contains("://") else { return nil }
+
+        // Must look like a path starting at the beginning:
+        // - Absolute (/), home-relative (~/), current-dir (./), parent-dir (..)
+        // - Or a relative path whose first token contains "/" (e.g., "folder/sub folder/file.txt")
+        let hasExplicitPathPrefix = firstTokenText.hasPrefix("/")
+            || firstTokenText.hasPrefix("~/")
+            || firstTokenText.hasPrefix("./")
+            || firstTokenText.hasPrefix("../")
+        let looksLikeRelativePath = firstTokenText.contains("/")
 
         guard hasExplicitPathPrefix || looksLikeRelativePath else { return nil }
 
