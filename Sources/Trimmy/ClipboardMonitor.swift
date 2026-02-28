@@ -457,6 +457,11 @@ extension ClipboardMonitor {
             wasTransformed = true
         }
 
+        if let cleaned = self.detector.stripClaudeCodeDecoration(currentText) {
+            currentText = cleaned
+            wasTransformed = true
+        }
+
         if let promptStripped = self.detector.stripPromptPrefixes(currentText) {
             currentText = promptStripped
             wasTransformed = true
